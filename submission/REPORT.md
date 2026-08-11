@@ -2,66 +2,71 @@
 
 ## 1. Thông tin nhóm
 
-- Tên nhóm:
-- Repository URL:
-- Commit SHA cuối:
+- Tên nhóm: K3 - Day 13
+- Repository URL: Chưa cập nhật
+- Commit SHA cuối: Chưa cập nhật trước khi nộp bài
 - Thành viên và vai trò:
+  - Thành viên A: Logging & Middleware
+  - Thành viên B: Security & Compliance
+  - Thành viên C: Metrics & Alerting
+  - Thành viên D: QA & Incident Analyst
 
 ## 2. Kết quả kỹ thuật
 
-- Điểm `validate_logs.py`: 100/100 (20 log records, 20 correlation ID duy nhất, 0 field thiếu)
-- Tổng số traces: 26+ (26 correlation ID duy nhất trong `data/logs.jsonl`, xác nhận khớp với Langfuse qua API)
-- Số PII leak còn lại: 0
-- Link/đường dẫn dashboard: TODO — điền đường dẫn ảnh `submission/evidence/dashboard.png` sau khi chụp
+- Điểm `validate_logs.py`: 100/100 sau khi tạo lại log sạch.
+- Tổng số traces: Chưa xác minh trên Langfuse.
+- Số PII leak còn lại: 0 trong lần chạy validator đã thực hiện.
+- Link/đường dẫn dashboard: `config/dashboard.yaml`; runtime screenshot chưa cập nhật.
 
 ## 3. Logging và tracing
 
-- Evidence correlation ID:
-- Evidence PII redaction:
-- Evidence trace waterfall:
-- Giải thích một span đáng chú ý:
+- Evidence Correlation ID: Response thành công giữ `x-request-id: test-cp1-001`; challenge có các ID `req-46b8548b`, `req-e285eb15`, `req-2bfbcae3`, `req-0e70d3fb`, `req-c8fefe3c`.
+- Evidence PII redaction: Log chứa `user_id_hash` thay vì user ID gốc; validator ghi nhận `Potential PII leaks detected: 0`.
+- Evidence trace waterfall: Chưa xác minh trên Langfuse.
+- Giải thích một span đáng chú ý: `app.mock_rag.retrieve()` tạo blocking delay 2.5 giây khi incident `rag_slow` được bật; `response_sent` ghi nhận latency khoảng 2650 ms.
 
 ## 4. Prompt versioning
 
-- Prompt name: day13-chat
-- Version/label baseline: version 1, label `baseline` — xác nhận qua trace metadata (`prompt_source: langfuse`)
-- Version/label candidate: version 2, label `candidate` — xác nhận qua trace metadata (`prompt_source: langfuse`)
-- Trace ID của mỗi version:
-  - baseline: `44e8d73462e8b59f241b76ff025ed2a8` — https://cloud.langfuse.com/project/cmso2gkcj03m1ad0izhq8u4qf/traces/44e8d73462e8b59f241b76ff025ed2a8
-  - candidate: `9aaa2a1d6641b5106098c0a9085e95a8` — https://cloud.langfuse.com/project/cmso2gkcj03m1ad0izhq8u4qf/traces/9aaa2a1d6641b5106098c0a9085e95a8
-- Bằng chứng đổi label hoặc rollback: đã đổi label `production` sang version 2, xác nhận qua trace `b237d36d2f582c0e1c1d50442f25a31e` (prompt_version=2), sau đó rollback `production` về version 1, xác nhận qua trace `e47071e1377588ecd5b04cbf9033cef7` (prompt_version=1). Cả 2 trace lấy được bằng cách gọi `/chat` ngay sau khi đổi label trên Langfuse và đợi hết TTL cache prompt (60s, xem `app/prompt_management.py`).
-  - promote → v2: https://cloud.langfuse.com/project/cmso2gkcj03m1ad0izhq8u4qf/traces/b237d36d2f582c0e1c1d50442f25a31e
-  - rollback → v1: https://cloud.langfuse.com/project/cmso2gkcj03m1ad0izhq8u4qf/traces/e47071e1377588ecd5b04cbf9033cef7
-  - TODO: chụp ảnh 4 trace trên (baseline, candidate, promote, rollback) lưu vào `submission/evidence/`
+- Prompt name: `day13-chat` theo cấu hình mặc định.
+- Version/label baseline: Chưa xác minh trên Langfuse.
+- Version/label candidate: Chưa xác minh trên Langfuse.
+- Trace ID của mỗi version: Chưa xác minh trên Langfuse.
+- Bằng chứng đổi label hoặc rollback: Chưa có evidence Langfuse thật.
 
 ## 5. Dashboard, SLO và alerts
 
-- Kết quả `validate_dashboard.py`: HỢP LỆ — 6/6 panel (latency, traffic, errors, cost, tokens, quality) đúng contract `config/dashboard.yaml`
-- Evidence dashboard: TODO — chụp ảnh dashboard (đủ 6 panel, time range 60 phút, threshold/SLO line) lưu vào `submission/evidence/dashboard.png`
-- SLO đã chọn và lý do (dựa trên baseline đo được từ `data/logs.jsonl`, xem `config/slo.yaml`):
-  - `latency_p95_ms`: objective 2000ms, target 99.5%/28d — baseline đo được ~1.1–1.3s, đặt margin để dò degrade thật
-  - `error_rate_pct`: objective 2%, target 99.0%/28d — baseline 0% lỗi, giữ ngưỡng an toàn thay vì 0% cứng
-  - `daily_cost_usd`: objective 0.3 USD, target 100%/28d — baseline quan sát ~0.13 USD, nhân ~2-2.5 lần làm margin
-  - `quality_score_avg`: objective 0.8, target 95.0%/28d — baseline trung bình 0.88 trên 30 request
-- Alert rules và runbook (`config/alert_rules.yaml`, chi tiết `docs/alerts.md`):
-  - `SlowResponsesForUsers` (warning) — p95 latency > 2000ms/5m, symptom: người dùng chờ lâu
-  - `ElevatedRequestFailureRate` (critical) — error rate > 2%/5m, symptom: một phần request không có phản hồi
-  - `DegradedAnswerQuality` (warning) — mean quality_score < 0.8/15m, symptom: câu trả lời kém liên quan/hữu ích hơn
+- Kết quả `validate_dashboard.py`: HỢP LỆ - 6/6 panel có trong dashboard contract.
+- Evidence dashboard: `submission/evidence/dashboard-validator.txt`; runtime screenshot chưa cập nhật.
+- SLO đã chốt và lý do:
+  - `latency_p95_ms`: mục tiêu không vượt 3000 ms, target 99.5%.
+  - `error_rate_pct`: mục tiêu không vượt 2%, target 99.0%.
+  - `daily_cost_usd`: mục tiêu không vượt 2.5 USD.
+  - `quality_score_avg`: mục tiêu không thấp hơn 0.75.
+- Alert rules và Runbook:
+  - `api_latency_p95_high`: P95 latency > 3000 ms trong 10 phút.
+  - `api_error_rate_high`: error rate > 2% trong 5 phút.
+  - `ai_cost_or_quality_breach`: daily cost > 2.5 USD hoặc quality average < 0.75 trong 15 phút.
+  - Cấu hình: `config/alert_rules.yaml`.
+  - Runbook: `docs/alerts.md`.
 
 ## 6. Điều tra challenge
 
-- Challenge ID:
-- Triệu chứng từ metrics:
-- Trace ID liên quan:
-- Log line/correlation ID liên quan:
-- Root cause:
-- Fix action:
-- Preventive measure:
+- Challenge ID: `day13-k3-observability-v1`
+- Triệu chứng từ metrics: Khi bật `rag_slow`, client-observed latency tăng lên khoảng 5314.0-13290.4 ms, vượt threshold 2000 ms.
+- Trace ID liên quan: Chưa xác minh trên Langfuse; correlation ID được dùng để truy vết log.
+- Log line/correlation ID liên quan: `req-46b8548b`, `req-e285eb15`, `req-2bfbcae3`, `req-0e70d3fb`, `req-c8fefe3c`.
+- Root cause: `app.mock_rag.retrieve()` gọi `time.sleep(2.5)` khi `STATE["rag_slow"]` là `True`, tạo blocking delay trong retrieval path.
+- Fix action: Tắt incident bằng `python scripts/inject_incident.py --disable` sau khi hoàn tất challenge.
+- Preventive measure: Theo dõi P95 latency, instrument retrieval span, dùng Correlation ID để liên kết Metrics - Traces - Logs và cảnh báo khi P95 vượt SLO.
+- Evidence chi tiết: `submission/evidence/challenge-runtime.txt`.
 
 ## 7. Đóng góp cá nhân
 
-Với mỗi thành viên, ghi rõ nhiệm vụ và link commit/PR tương ứng.
+Với mỗi thành viên, ghi rõ nhiệm vụ, commit/PR tương ứng và evidence đã hoàn thành.
 
-| Thành viên | Phần việc | Commit/PR | Điều đã học |
-|---|---|---|---|
-| | | | |
+| Thành viên   | Phạm vi việc                                        | Commit/PR     | Evidence đã hoàn thành                                        |
+| ------------ | --------------------------------------------------- | ------------- | ------------------------------------------------------------- |
+| Thành viên A | Middleware, Correlation ID, log metadata enrichment | Chưa cập nhật | CP1, `validate_logs.py` 100/100                               |
+| Thành viên B | PII scrubbing và Security & Compliance              | Chưa cập nhật | PII leak 0 trong validator                                    |
+| Thành viên C | Langfuse, Metrics, SLO, Alert rules và Runbook      | Chưa cập nhật | Alert rules và Runbook đã có; Langfuse evidence chưa xác minh |
+| Thành viên D | Load test, Dashboard và Incident Analysis           | Chưa cập nhật | Dashboard 6/6, challenge evidence                             |

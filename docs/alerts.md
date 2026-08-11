@@ -1,45 +1,41 @@
-# Template Alert và Runbook
-
-Mỗi alert phải dựa trên triệu chứng người dùng hoặc SLO, không dựa trực tiếp vào tên implementation nội bộ.
+# Alert và Runbook Day 13
 
 ## Alert 1
 
-- Tên: SlowResponsesForUsers
+- Tên: `api_latency_p95_high`
 - Severity: warning
-- SLI/SLO liên quan: `latency_p95_ms` (objective ≤ 2000ms, target 99.5% trong 28d)
-- Điều kiện và thời gian duy trì: p95 của `response_sent.latency_ms` > 2000ms, duy trì liên tục 5 phút
-- Ảnh hưởng tới người dùng: Người dùng phải chờ câu trả lời lâu hơn bình thường, trải nghiệm chat bị chậm/đơ
-- Ba bước kiểm tra đầu tiên:
-  1. Xem panel Latency trên dashboard để xác nhận p95/p99 tăng và từ thời điểm nào
-  2. Mở trace của các request chậm gần nhất, xem span nào (RAG retrieval, LLM call, ...) chiếm phần lớn thời gian
-  3. Kiểm tra traffic cùng thời điểm (panel Traffic) để loại trừ nguyên nhân do tăng tải đột biến
-- Mitigation tạm thời: Giảm concurrency/rate limit tạm thời, hoặc chuyển sang fallback response nhanh hơn (rút gọn context/số doc retrieve) trong khi điều tra nguyên nhân gốc
-- Owner: on-call-backend
+- SLI/SLO: `latency_p95_ms <= 3000`
+- Điều kiện: P95 latency > 3000 ms trong 10 phút.
+- Ảnh hưởng: request chậm, timeout hoặc trải nghiệm người dùng giảm.
+- Ba kiểm tra đầu tiên: xem latency panel; tìm trace chậm; đối chiếu log theo correlation ID.
+- Mitigation: tắt incident practice, kiểm tra retrieval/tool, giảm concurrency nếu cần.
+- Owner: Metrics & Alerting
 
 ## Alert 2
 
-- Tên: ElevatedRequestFailureRate
+- Tên: `api_error_rate_high`
 - Severity: critical
-- SLI/SLO liên quan: `error_rate_pct` (objective ≤ 2%, target 99.0% trong 28d)
-- Điều kiện và thời gian duy trì: (`request_failed` / `request_received`) > 2%, duy trì liên tục 5 phút
-- Ảnh hưởng tới người dùng: Một phần yêu cầu của người dùng không nhận được câu trả lời (lỗi/timeout), có thể mất dữ liệu hội thoại
-- Ba bước kiểm tra đầu tiên:
-  1. Xem panel Errors để biết `error_type` nào chiếm đa số (timeout, exception, upstream lỗi...)
-  2. Lọc log theo `correlation_id` của các request lỗi gần nhất để xem chi tiết stack/nguyên nhân
-  3. Kiểm tra trace tương ứng để xác định lỗi xảy ra ở bước nào trong pipeline (retrieval, LLM call, post-processing)
-- Mitigation tạm thời: Bật retry có giới hạn cho lỗi tạm thời (transient), hoặc rollback về prompt/version ổn định gần nhất nếu lỗi mới xuất hiện sau một lần đổi label/deploy
-- Owner: on-call-backend
+- SLI/SLO: `error_rate_pct <= 2`
+- Điều kiện: error rate > 2% trong 5 phút.
+- Ảnh hưởng: request thất bại và chức năng bị gián đoạn.
+- Ba kiểm tra đầu tiên: xem error breakdown; tìm `request_failed`; đối chiếu correlation ID với trace.
+- Mitigation: rollback prompt/deploy gần nhất, tắt incident, chuyển fallback nếu có.
+- Owner: Metrics & Alerting
 
 ## Alert 3
 
-- Tên: DegradedAnswerQuality
+- Tên: `ai_cost_or_quality_breach`
 - Severity: warning
-- SLI/SLO liên quan: `quality_score_avg` (objective ≥ 0.8, target 95.0% trong 28d)
-- Điều kiện và thời gian duy trì: mean(`response_sent.quality_score`) < 0.8, duy trì liên tục 15 phút
-- Ảnh hưởng tới người dùng: Câu trả lời kém liên quan hơn, ngắn hơn hoặc bị che (PII redaction) nhiều hơn bình thường, giảm độ hữu ích của trợ lý
-- Ba bước kiểm tra đầu tiên:
-  1. Xem panel Quality để xác nhận xu hướng giảm và mốc thời gian bắt đầu
-  2. Đối chiếu với `docs/PROMPT_VERSIONING.md` xem có vừa đổi `prompt_label`/`prompt_version` trùng thời điểm không
-  3. Đọc mẫu vài `response_sent.payload.answer_preview` để xem câu trả lời có bị cắt ngắn, không liên quan, hoặc bị redact nhiều bất thường không
-- Mitigation tạm thời: Rollback prompt về version/label ổn định trước đó nếu nguyên nhân là do đổi prompt; nếu do dữ liệu retrieval kém thì tạm mở rộng số lượng doc retrieve
-- Owner: on-call-backend
+- SLI/SLO: daily cost <= 2.5 USD và quality average >= 0.75.
+- Điều kiện: daily cost > 2.5 USD hoặc quality average < 0.75 trong 15 phút.
+- Ảnh hưởng: chi phí tăng hoặc chất lượng trả lời giảm.
+- Ba kiểm tra đầu tiên: xem token/cost panel; kiểm tra output token bất thường; so sánh quality theo feature/model.
+- Mitigation: giới hạn output tokens, tắt `cost_spike`, rollback prompt candidate.
+- Owner: Metrics & Alerting
+
+## Quy trình chung
+
+1. Ghi nhận thời điểm, alert và phạm vi ảnh hưởng.
+2. Dùng Metrics để xác định triệu chứng, Traces để tìm span bất thường và Logs để xác nhận nguyên nhân.
+3. Thực hiện mitigation an toàn, sau đó xác nhận SLI trở về ngưỡng.
+4. Lưu metric, trace ID, correlation ID và log line vào `submission/evidence/`.

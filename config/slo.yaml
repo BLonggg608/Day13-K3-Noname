@@ -4,6 +4,7 @@ slis:
   latency_p95_ms:
     objective: 2000
     target: 99.5
+    note: 99.5% of requests should keep P95 latency at or below 3000 ms over the 28-day window.
   error_rate_pct:
     objective: 2
     target: 99.0

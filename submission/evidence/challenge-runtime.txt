@@ -1,0 +1,22 @@
+Challenge: day13-k3-observability-v1
+Cohort: K3
+Incident: rag_slow (enabled before run, disabled after run)
+Threshold: 2000 ms
+
+Load-test observations:
+- req-46b8548b: 5314.9 ms
+- req-e285eb15: 5314.0 ms
+- req-2bfbcae3: 13287.2 ms
+- req-0e70d3fb: 13290.4 ms
+- req-c8fefe3c: 13289.0 ms
+
+Log evidence:
+- req-46b8548b response_sent latency_ms=2651, session_id=k3-challenge-s02
+- req-e285eb15 response_sent latency_ms=2651, session_id=k3-challenge-s05
+- req-2bfbcae3 response_sent latency_ms=2651, session_id=k3-challenge-s03
+- req-0e70d3fb response_sent latency_ms=2650, session_id=k3-challenge-s01
+- req-c8fefe3c response_sent latency_ms=2650, session_id=k3-challenge-s04
+
+Root cause: app.mock_rag.retrieve() adds a 2.5-second blocking delay when STATE["rag_slow"] is enabled. Client-observed latency is higher under concurrency because the synchronous path contends while requests are processed.
+Fix: incident was disabled after the run; production mitigation is to remove the injected delay and investigate retrieval latency.
+Preventive measure: alert on P95 latency, trace retrieval spans, and correlate every response with request logs.

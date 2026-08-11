@@ -1,19 +1,19 @@
 alerts:
-  - name: SlowResponsesForUsers
+  - name: api_latency_p95_high
     severity: warning
-    condition: p95(response_sent.latency_ms) over 5m > 2000
+    condition: latency_p95_ms > 3000 for 10m
     type: symptom-based
-    owner: on-call-backend
+    owner: Metrics & Alerting
     runbook: docs/alerts.md#alert-1
-  - name: ElevatedRequestFailureRate
+  - name: api_error_rate_high
     severity: critical
-    condition: rate(request_failed) / rate(request_received) over 5m > 2%
+    condition: error_rate_pct > 2 for 5m
     type: symptom-based
-    owner: on-call-backend
+    owner: Metrics & Alerting
     runbook: docs/alerts.md#alert-2
-  - name: DegradedAnswerQuality
+  - name: ai_cost_or_quality_breach
     severity: warning
-    condition: mean(response_sent.quality_score) over 15m < 0.8
+    condition: daily_cost_usd > 2.5 or quality_score_avg < 0.75 for 15m
     type: symptom-based
-    owner: on-call-backend
+    owner: Metrics & Alerting
     runbook: docs/alerts.md#alert-3
