@@ -2,15 +2,15 @@ service: day13-observability-lab
 window: 28d
 slis:
   latency_p95_ms:
-    objective: 3000
+    objective: 2000
     target: 99.5
     note: 99.5% of requests should keep P95 latency at or below 3000 ms over the 28-day window.
   error_rate_pct:
     objective: 2
     target: 99.0
   daily_cost_usd:
-    objective: 2.5
+    objective: 0.3
     target: 100.0
   quality_score_avg:
-    objective: 0.75
+    objective: 0.8
     target: 95.0

@@ -26,15 +26,15 @@ def load_data(file_path):
         st.error(f"Error loading data: {e}")
         return pd.DataFrame()
 
-df = load_data("data/logs.jsonl")
-
-if df.empty:
-    st.warning("Không tìm thấy dữ liệu trong `data/logs.jsonl`")
-    st.stop()
-
 # Auto-refresh mỗi 30s
 @st.fragment(run_every="30s")
-def render_dashboard(df):
+def render_dashboard():
+    df = load_data("data/logs.jsonl")
+    
+    if df.empty:
+        st.warning("Không tìm thấy dữ liệu trong `data/logs.jsonl`")
+        return
+
     # Lọc 60 phút gần nhất
     if "ts" in df.columns and not df.empty:
         max_ts = df["ts"].max()
@@ -176,4 +176,4 @@ def render_dashboard(df):
         else:
             st.info("Chưa có dữ liệu chất lượng")
 
-render_dashboard(df)
+render_dashboard()

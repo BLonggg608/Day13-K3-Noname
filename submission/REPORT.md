@@ -64,9 +64,9 @@
 
 Với mỗi thành viên, ghi rõ nhiệm vụ, commit/PR tương ứng và evidence đã hoàn thành.
 
-| Thành viên | Phạm vi việc | Commit/PR | Evidence đã hoàn thành |
-|---|---|---|---|
-| Thành viên A | Middleware, Correlation ID, log metadata enrichment | Chưa cập nhật | CP1, `validate_logs.py` 100/100 |
-| Thành viên B | PII scrubbing và Security & Compliance | Chưa cập nhật | PII leak 0 trong validator |
-| Thành viên C | Langfuse, Metrics, SLO, Alert rules và Runbook | Chưa cập nhật | Alert rules và Runbook đã có; Langfuse evidence chưa xác minh |
-| Thành viên D | Load test, Dashboard và Incident Analysis | Chưa cập nhật | Dashboard 6/6, challenge evidence |
+| Thành viên   | Phạm vi việc                                        | Commit/PR     | Evidence đã hoàn thành                                        |
+| ------------ | --------------------------------------------------- | ------------- | ------------------------------------------------------------- |
+| Thành viên A | Middleware, Correlation ID, log metadata enrichment | Chưa cập nhật | CP1, `validate_logs.py` 100/100                               |
+| Thành viên B | PII scrubbing và Security & Compliance              | Chưa cập nhật | PII leak 0 trong validator                                    |
+| Thành viên C | Langfuse, Metrics, SLO, Alert rules và Runbook      | Chưa cập nhật | Alert rules và Runbook đã có; Langfuse evidence chưa xác minh |
+| Thành viên D | Load test, Dashboard và Incident Analysis           | Chưa cập nhật | Dashboard 6/6, challenge evidence                             |
