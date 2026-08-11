@@ -1,19 +1,19 @@
 alerts:
-  - name: TODO_alert_1
-    severity: TODO
-    condition: TODO
+  - name: SlowResponsesForUsers
+    severity: warning
+    condition: p95(response_sent.latency_ms) over 5m > 2000
     type: symptom-based
-    owner: TODO
+    owner: on-call-backend
     runbook: docs/alerts.md#alert-1
-  - name: TODO_alert_2
-    severity: TODO
-    condition: TODO
+  - name: ElevatedRequestFailureRate
+    severity: critical
+    condition: rate(request_failed) / rate(request_received) over 5m > 2%
     type: symptom-based
-    owner: TODO
+    owner: on-call-backend
     runbook: docs/alerts.md#alert-2
-  - name: TODO_alert_3
-    severity: TODO
-    condition: TODO
+  - name: DegradedAnswerQuality
+    severity: warning
+    condition: mean(response_sent.quality_score) over 15m < 0.8
     type: symptom-based
-    owner: TODO
+    owner: on-call-backend
     runbook: docs/alerts.md#alert-3
